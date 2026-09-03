@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <AssemblyName>TTFLoaderIL2CPP</AssemblyName>
+    <AssemblyName>TTFLoaderIL2CPP_Thaifont</AssemblyName>
     <Description>BepInEx plugin to load TTF fonts directly</Description>
-    <Version>1.1.0</Version>
+    <Version>1.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
@@ -12,7 +12,7 @@
       https://api.nuget.org/v3/index.json;
       https://nuget.bepinex.dev/v3/index.json
     </RestoreAdditionalProjectSources>
-    <RootNamespace>TTFLoaderIL2CPP</RootNamespace>
+    <RootNamespace>TTFLoaderIL2CPP_Thaifont</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
