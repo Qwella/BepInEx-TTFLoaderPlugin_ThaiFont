@@ -20,33 +20,16 @@ namespace TTFLoaderIL2CPP
         {
             Log.LogInfo($"Plugin {PLUGIN_NAME} is loaded!");
 
-            // 初始化字体目录路径
-            // fontsDirectory = Path.Combine(Paths.PluginPath, "Fonts");
-            // if (!Directory.Exists(fontsDirectory))
-            // {
-            //     Directory.CreateDirectory(fontsDirectory);
-            //     Log.LogWarning($"Fonts directory created: {fontsDirectory}");
-            // }
-
-
-            // 使用游戏根目录作为字体加载路径
             fontsDirectory = Paths.GameRootPath;
-
-
-            // 从 Fonts 目录中查找并加载第一个可用字体
             LoadDefaultFontFromDirectory();
 
             Log.LogInfo($"TTF Loader initialized. Fonts directory: {fontsDirectory}");
         }
 
-        /// <summary>
-        /// 从 Fonts 目录中枚举所有字体文件，尝试加载第一个可用的字体作为默认 TMP 字体
-        /// </summary>
         private void LoadDefaultFontFromDirectory()
         {
             try
             {
-                // 获取所有 .ttf 或 .TTF 文件
                 string[] fontFiles = Directory.GetFiles(fontsDirectory, "*.ttf", SearchOption.TopDirectoryOnly);
                 if (fontFiles.Length == 0)
                 {
@@ -70,15 +53,10 @@ namespace TTFLoaderIL2CPP
                         {
                             TMP_Settings.defaultFontAsset = customFont;
                             Log.LogInfo($"Successfully set default TMP font to: {fontName}");
-                            return; // 成功加载一个就退出
                         }
-                        catch (System.Exception)
+                        catch (Exception)
                         {
-                            // 尝试使用反射绕过权限限制
-                            // 获取 TMP_Settings 类型
                             var settingsType = typeof(TMPro.TMP_Settings);
-                            // 查找字段（TMP 内部通常将其存储在 s_defaultFontAsset 或类似字段中）
-                            // 或者尝试获取 PropertyInfo
                             var prop = settingsType.GetProperty("defaultFontAsset", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
 
                             if (prop != null && prop.CanWrite)
@@ -87,15 +65,27 @@ namespace TTFLoaderIL2CPP
                             }
                             else
                             {
-                                // 如果属性不可写，尝试直接写私有背景字段 (不同版本 TMP 字段名可能不同，常见为 k_DefaultFontAsset)
                                 var field = settingsType.GetField("k_DefaultFontAsset", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
                                 field?.SetValue(null, customFont);
                             }
 
                             Log.LogInfo($"Successfully set default TMP font via Reflection: {fontName}");
-                            return;
                         }
 
+                        var loadedFonts = Resources.FindObjectsOfTypeAll<TMP_FontAsset>();
+                        foreach (var baseFontAsset in loadedFonts)
+                        {
+                            if (baseFontAsset != null && baseFontAsset != customFont && baseFontAsset.fallbackFontAssetTable != null)
+                            {
+                                if (!baseFontAsset.fallbackFontAssetTable.Contains(customFont))
+                                {
+                                    baseFontAsset.fallbackFontAssetTable.Add(customFont);
+                                    Log.LogInfo($"Added [{fontName}] as fallback to [{baseFontAsset.name}]");
+                                }
+                            }
+                        }
+
+                        return;
                     }
                     else
                     {
@@ -111,16 +101,10 @@ namespace TTFLoaderIL2CPP
             }
         }
 
-        /// <summary>
-        /// 加载 TTF 字体文件并返回 Unity Font 对象
-        /// </summary>
-        /// <param name="fontName">字体文件名（不含扩展名）</param>
-        /// <returns>Unity Font 对象</returns>
         public Font LoadTTF(string fontName)
         {
             Font font = null;
 
-            // 首先尝试从插件目录中的 Fonts 文件夹加载 .ttf 文件
             string ttfPath = Path.Combine(fontsDirectory, fontName + ".ttf");
             if (!File.Exists(ttfPath))
             {
@@ -130,20 +114,19 @@ namespace TTFLoaderIL2CPP
             if (File.Exists(ttfPath))
             {
                 Log.LogInfo($"Found TTF file: {ttfPath}");
-                font = new Font(ttfPath); // 使用本地字体文件创建 Font 对象
+                font = new Font(ttfPath);
             }
 
             if (font != null)
                 return font;
 
-            // 如果找不到本地字体，尝试使用系统字体
             string[] variants = {
                 fontName,
                 $"{fontName}-Regular",
                 $"{fontName} Regular",
-                "Noto Sans SC",
-                "Microsoft YaHei",
-                "SimHei"
+                "Tahoma",
+                "Cordia New",
+                "Microsoft YaHei"
             };
 
             foreach (string variant in variants)
@@ -156,21 +139,14 @@ namespace TTFLoaderIL2CPP
                 }
             }
 
-            // 最终兜底方案：使用默认 Arial 字体
             Log.LogWarning($"Using fallback font 'Arial' for: {fontName}");
             return Font.CreateDynamicFontFromOSFont("Arial", 12);
         }
 
-        /// <summary>
-        /// 加载 TTF 字体并创建 TMP_FontAsset 对象
-        /// </summary>
-        /// <param name="fontName">字体文件名（不含扩展名）</param>
-        /// <returns>TMP_FontAsset 对象</returns>
         public TMP_FontAsset LoadTMPTTF(string fontName)
         {
             try
             {
-                // 先加载基础 Unity Font
                 Font baseFont = LoadTTF(fontName);
                 if (baseFont == null)
                 {
@@ -178,8 +154,14 @@ namespace TTFLoaderIL2CPP
                     return null;
                 }
 
-                // 创建 TMP 字体资源
-                TMP_FontAsset tmpFont = TMP_FontAsset.CreateFontAsset(baseFont);
+                TMP_FontAsset tmpFont = TMP_FontAsset.CreateFontAsset(
+                    baseFont,
+                    120,
+                    9,
+                    UnityEngine.TextCore.LowLevel.GlyphRenderMode.SDF,
+                    1024,
+                    1024
+                );
 
                 if (tmpFont == null)
                 {
@@ -188,7 +170,19 @@ namespace TTFLoaderIL2CPP
                 }
 
                 tmpFont.name = fontName;
-                Log.LogInfo($"Successfully created TMP font: {fontName}");
+				
+				//ปรับไซส์ฟอนท์ในเกม
+				var faceInfo = tmpFont.faceInfo;
+				faceInfo.scale = 1.4f; 
+				tmpFont.faceInfo = faceInfo;
+
+                if (tmpFont.material != null)
+                {
+                    tmpFont.material.SetFloat(ShaderUtilities.ID_FaceDilate, 0f);
+                    tmpFont.material.SetFloat(ShaderUtilities.ID_OutlineWidth, 0f);
+                }
+
+                Log.LogInfo($"Successfully created TMP font with fixed material: {fontName}");
                 return tmpFont;
             }
             catch (Exception ex)
@@ -196,6 +190,42 @@ namespace TTFLoaderIL2CPP
                 Log.LogError($"Failed to create TMP font {fontName}: {ex.Message}\n{ex.StackTrace}");
                 return null;
             }
+        }
+
+        // === ฟังก์ชันจัดตำแหน่งสระไทย ===
+        public static string FixThaiGlyphs(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+
+            char[] chars = text.ToCharArray();
+            for (int i = 0; i < chars.Length; i++)
+            {
+                if (i > 0 && IsUpperThaiMark(chars[i]))
+                {
+                    char prev = chars[i - 1];
+                    if (IsTallConsonant(prev))
+                    {
+                        chars[i] = ShiftToShiftedUnicode(chars[i]);
+                    }
+                }
+            }
+            return new string(chars);
+        }
+
+        private static bool IsTallConsonant(char c) => c == 'ป' || c == 'ฝ' || c == 'ฟ' || c == 'ฬ';
+        private static bool IsUpperThaiMark(char c) => (c >= '\u0E31' && c <= '\u0E37') || (c >= '\u0E47' && c <= '\u0E4E');
+
+        private static char ShiftToShiftedUnicode(char c)
+        {
+            return c switch
+            {
+                '\u0E48' => '\uF70A',
+                '\u0E49' => '\uF70B',
+                '\u0E4A' => '\uF70C',
+                '\u0E4B' => '\uF70D',
+                '\u0E31' => '\uF710',
+                _ => c
+            };
         }
     }
 }
