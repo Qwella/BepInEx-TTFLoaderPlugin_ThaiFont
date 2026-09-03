@@ -5,7 +5,7 @@ using System.IO;
 using UnityEngine;
 using TMPro;
 
-namespace TTFLoaderIL2CPP
+namespace TTFLoaderIL2CPP_Thaifont
 {
     [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
     public class TTFLoaderPlugin : BasePlugin
