@@ -12,7 +12,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace TTFLoaderMono
+namespace TTFLoaderMono_Thaifont
 {
     [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
     public class TTFLoaderPlugin : BaseUnityPlugin
