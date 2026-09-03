@@ -10,9 +10,9 @@ namespace TTFLoaderIL2CPP
     [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
     public class TTFLoaderPlugin : BasePlugin
     {
-        public const string PLUGIN_GUID = "com.github.you9you.ttfloader";
-        public const string PLUGIN_NAME = "TTF Font Loader (IL2CPP)";
-        public const string PLUGIN_VERSION = "1.1.0";
+        public const string PLUGIN_GUID = "com.github.qwella.ttfloader";
+        public const string PLUGIN_NAME = "TTF Thai Font Loader (IL2CPP)";
+        public const string PLUGIN_VERSION = "1.0.0";
 
         private static string fontsDirectory;
 
