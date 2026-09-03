@@ -2,16 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
-    <AssemblyName>TTFLoaderMono</AssemblyName>
+    <AssemblyName>TTFLoaderMono_Thaifont</AssemblyName>
     <Description>BepInEx plugin to load TTF fonts directly</Description>
-    <Version>1.1.0</Version>
+    <Version>1.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <RestoreAdditionalProjectSources>
       https://api.nuget.org/v3/index.json;
       https://nuget.bepinex.dev/v3/index.json
     </RestoreAdditionalProjectSources>
-    <RootNamespace>TTFLoaderMono</RootNamespace>
+    <RootNamespace>TTFLoaderMono_Thaifont</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
